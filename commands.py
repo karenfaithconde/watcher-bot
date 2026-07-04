@@ -20,8 +20,13 @@ from config import BAN_AT
 from warnings_store import warning_counts
 from ui_notify import NotifyButton
 from ui_modmenu import ModMenuView
+from ui_help import HelpMenuView, build_menu_embed
 
-
+@bot.command()
+async def setuphelp(ctx):
+    """Posts the permanent help menu. Only needs to be run once e.g. in your help channel."""
+    await ctx.send(embed=build_menu_embed(), view=HelpMenuView())
+    
 @bot.command()
 async def setupnotify(ctx):
     """Posts the persistent notify button. Only needs to be run once,

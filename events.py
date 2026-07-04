@@ -24,6 +24,7 @@ from datetime import timedelta
 from filters import is_flagged, is_spamming, is_dangerous_link
 from warnings_store import warning_counts, save_warnings
 from ui_notify import NotifyButton
+from ui_help import HelpMenuView, HelpDetailView
 
 
 @bot.event
@@ -31,6 +32,8 @@ async def on_ready():
     print(f"Logged in as {bot.user.name}")
     print(f"Online in {len(bot.guilds)} server(s)")
     bot.add_view(NotifyButton())
+    bot.add_view(HelpMenuView())
+    bot.add_view(HelpDetailView())
 
 
 @bot.event
