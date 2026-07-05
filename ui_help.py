@@ -56,6 +56,14 @@ HELP_CONTENT = {
         "detail": "Run `!setuphelp` once in your help channel. It posts this "
                    "permanent dropdown menu — no need to run it again."
     },
+    "profile": {
+        "label": "10. Profile Check (!p)",
+        "desc": "Checks account age and risk signals",
+        "detail": "Reply to a message with `!p` to check that member's profile "
+                   "directly, or type `!p` alone for a button that opens a "
+                   "lookup form. Shows account age, join date, roles, and a "
+                   "rough risk score based on public signals."
+    },
 }
 
 
@@ -110,7 +118,7 @@ class HelpMenuView(discord.ui.View):
     async def select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
         key = select.values[0]
 
-        mod_only_keys = ("modmenu", "purge", "setupnotify", "setuphelp")
+        mod_only_keys = ("modmenu", "purge", "setupnotify", "setuphelp", "profile")
 
         if key in mod_only_keys and not interaction.user.guild_permissions.manage_messages:
             await interaction.response.send_message(
