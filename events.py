@@ -1,21 +1,3 @@
-"""
-events.py
-
-Registers every @bot.event handler:
-
-- on_ready         — startup log + re-registers the persistent NotifyButton
-- on_member_join   — welcome embed + Notify role ping
-- on_member_remove — "someone just left" embed
-- on_message       — runs every message through the profanity, dangerous
-                     link, and spam checks (in that order), escalating
-                     warnings into a timeout or ban as needed, then
-                     always hands off to process_commands so ! commands
-                     still work
-
-Importing this module is what actually registers the handlers with the
-bot — main.py imports it purely for that side effect.
-"""
-
 import discord
 
 from bot_instance import bot
@@ -38,7 +20,7 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
-    """Sends a welcome embed + pings the Notify role when someone joins."""
+    # welcome embed + Notify role ping
     channel = bot.get_channel(WELCOME_CHANNEL_ID)
     if not channel:
         return
@@ -65,7 +47,7 @@ async def on_member_join(member):
 
 @bot.event
 async def on_member_remove(member):
-    """Sends a 'someone left' embed when a member leaves/is removed."""
+    # "someone left" embed
     channel = bot.get_channel(WELCOME_CHANNEL_ID)
     if not channel:
         return
@@ -84,10 +66,7 @@ async def on_member_remove(member):
 
 @bot.event
 async def on_message(message):
-    """Filters every message for profanity, dangerous links, or spam
-    (checked in that order — only one violation type applies per
-    message), escalates warnings into a timeout/ban, then always hands
-    off to process_commands so ! commands still work."""
+    # checks profanity, then dangerous links, then spam (only one applies per message)
     if message.author.bot:
         return
 
