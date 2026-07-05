@@ -19,6 +19,39 @@ async def on_ready():
 
 
 @bot.event
+async def on_guild_join(guild):
+    # prefers a channel named "general" (if the bot can post there),
+    # otherwise falls back to the first text channel the bot can post in
+    channel = next(
+        (c for c in guild.text_channels
+         if c.name.lower() == "general" and c.permissions_for(guild.me).send_messages),
+        None
+    )
+    if channel is None:
+        channel = next(
+            (c for c in guild.text_channels if c.permissions_for(guild.me).send_messages),
+            None
+        )
+    if channel is None:
+        print(f"Joined {guild.name} but couldn't find a channel to post in.")
+        return
+
+    embed = discord.Embed(
+        title="Thanks for adding Watcher",
+        description=(
+            "There are two quick things to set up, and you'll only need to do them once.\n\n"
+            "**`!setuphelp`** — run this here\n"
+            "This posts a menu that walks through everything Watcher does.\n\n"
+            "**`!setupnotify`** — run this in whatever channel you want\n"
+            "This adds a toggle button so people can turn join-pings on or off for themselves.\n\n"
+            "Once those are done, you're all set."
+        ),
+        color=0x5865F2
+    )
+    await channel.send(embed=embed)
+
+
+@bot.event
 async def on_member_join(member):
     # welcome embed + Notify role ping
     channel = bot.get_channel(WELCOME_CHANNEL_ID)
