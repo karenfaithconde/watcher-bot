@@ -1,17 +1,3 @@
-"""
-commands.py
-
-Registers every @bot.command:
-
-- !setupnotify — posts the persistent join-ping toggle button (run once)
-- !m           — reply to a message to bring up the mute/warn/clear/
-                 ban/unban moderation menu
-- !purge       — bulk-delete messages (aliases: !clear, !clean)
-
-Like events.py, importing this module registers the commands as a
-side effect — main.py imports it purely to trigger that registration.
-"""
-
 import discord
 from discord.ext import commands
 
@@ -21,23 +7,42 @@ from warnings_store import warning_counts
 from ui_notify import NotifyButton
 from ui_modmenu import ModMenuView
 from ui_help import HelpMenuView, build_menu_embed
+from ui_profile import ProfileLookupView, build_profile_embed
+
+
+@bot.command(name="p")
+@commands.has_permissions(manage_messages=True)
+async def profile_check(ctx):
+    # reply with !p to check that person directly, or just type !p for a lookup form
+    if ctx.message.reference:
+        replied = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+        target = replied.author
+
+        if target.bot:
+            await ctx.send("Can't check a bot.", delete_after=6)
+            return
+
+        await ctx.send(embed=build_profile_embed(target))
+    else:
+        await ctx.send("Click below to check a member's profile:", view=ProfileLookupView())
+
 
 @bot.command()
 async def setuphelp(ctx):
-    """Posts the permanent help menu. Only needs to be run once e.g. in your help channel."""
+    # run once, posts the permanent help menu
     await ctx.send(embed=build_menu_embed(), view=HelpMenuView())
-    
+
+
 @bot.command()
 async def setupnotify(ctx):
-    """Posts the persistent notify button. Only needs to be run once,
-    e.g. in your roles-and-toggles channel."""
+    # run once, posts the join-ping toggle button
     await ctx.send("Click the button below to toggle join pings:", view=NotifyButton())
 
 
 @bot.command(name="m")
 @commands.has_permissions(manage_messages=True)
 async def mod_menu(ctx):
-    """Reply to someone's message with !m to bring up the moderation menu."""
+    # reply to a message with !m to bring up the mute/warn/clear/ban/unban menu
     if not ctx.message.reference:
         await ctx.send("Reply to the message you want to act on, with !m.", delete_after=6)
         return
@@ -66,8 +71,7 @@ async def mod_menu(ctx):
 @commands.has_permissions(manage_messages=True)
 @commands.bot_has_permissions(manage_messages=True)
 async def purge(ctx, amount: int):
-    """!purge <amount> (or !clear / !clean) — deletes the last `amount`
-    messages plus the command message itself."""
+    # deletes the last <amount> messages plus the command itself
     if amount <= 0:
         await ctx.send("Please provide a number greater than 0.", delete_after=5)
         return
