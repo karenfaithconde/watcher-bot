@@ -1,24 +1,6 @@
-"""
-ui_help.py
-
-The permanent, README-style help menu posted once via !setuphelp.
-
-- HELP_CONTENT   — all dropdown option text + detail text in one place,
-                   so adding/editing a feature only means editing this dict
-- HelpMenuView   — the dropdown (select menu) shown first
-- HelpDetailView — shown after picking an option: the detail text + a
-                   Back button that returns to HelpMenuView
-
-Both views use timeout=None and a fixed custom_id so they keep working
-across bot restarts, as long as bot.add_view() registers them in
-on_ready (same pattern as NotifyButton).
-"""
-
 import discord
 
-# Each entry: label shown in dropdown (numbered instead of using an
-# emoji), one-line description shown in dropdown, and the longer detail
-# text shown after it's picked.
+# each entry: dropdown label, one-line description, and the longer detail text
 HELP_CONTENT = {
     "profanity": {
         "label": "1. Language Filter",
@@ -99,9 +81,7 @@ def build_detail_embed(key):
 
 
 class HelpDetailView(discord.ui.View):
-    """Shown after picking a dropdown option. Just a Back button — it
-    doesn't need to remember which option was picked, since Back always
-    returns to the same starting menu."""
+    # just a Back button, always returns to the same starting menu
     def __init__(self):
         super().__init__(timeout=None)
 
@@ -111,8 +91,7 @@ class HelpDetailView(discord.ui.View):
 
 
 class HelpMenuView(discord.ui.View):
-    """The starting dropdown. Selecting an option edits the message in
-    place to show that feature's detail + a Back button."""
+    # the starting dropdown, picking an option swaps the message to that feature's detail
     def __init__(self):
         super().__init__(timeout=None)
 
