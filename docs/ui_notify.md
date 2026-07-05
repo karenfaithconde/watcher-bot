@@ -1,19 +1,54 @@
 # ui_notify.py
 
-The smallest UI file — just one button, the "Toggle Join Pings" button members click to opt in or out of being pinged when someone new joins.
+This was the very first button I ever got working, and it is still one of my favorites since it taught me most of what I now know about buttons that need to survive a restart.
 
-## Why it needs to be "persistent"
+## The whole file
 
-Normally, Discord buttons only work for a limited time after being created — great for something temporary like a confirmation prompt, bad for a button that's supposed to work forever after being posted once via `!setupnotify`.
+```python
+import discord
 
-Three things make this button permanent:
+from config import NOTIFY_ROLE_ID
 
-1. **`timeout=None`** in `__init__` — tells Discord this view never expires on its own
-2. **`custom_id="notify_button"`** — gives the button a fixed identifier Discord can recognize even after the bot restarts
-3. **`bot.add_view(NotifyButton())`** in `on_ready` (in `events.py`) — tells the bot, every time it starts up, "remember that this `custom_id` belongs to this button's code"
 
-Without all three together, the button would stop responding the next time the bot restarts.
+class NotifyButton(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
 
-## What happens when it's clicked
+    @discord.ui.button(label="Toggle Join Pings", style=discord.ButtonStyle.blurple, custom_id="notify_button")
+    async def toggle(self, interaction, button):
+        role = interaction.guild.get_role(NOTIFY_ROLE_ID)
 
-Checks if the person already has the Notify role. If yes, removes it and tells them privately ("ephemeral" — only they see the reply). If no, adds it and confirms the same way.
+        if role in interaction.user.roles:
+            await interaction.user.remove_roles(role)
+            await interaction.response.send_message("Turned off join pings.", ephemeral=True)
+        else:
+            await interaction.user.add_roles(role)
+            await interaction.response.send_message("Turned on join pings.", ephemeral=True)
+```
+
+## Why this button needed extra setup
+
+My first version of this button worked fine right after I posted it, then completely stopped responding the next time I restarted the bot, and I could not figure out why for a while. Turns out Discord buttons normally only last a limited amount of time before they are considered expired, which is perfect for something temporary but not for a button that is supposed to work forever after being posted once through !setupnotify.
+
+Three things fix that, and this file only handles part of it.
+
+timeout=None right here tells the view itself to never expire on its own.
+
+custom_id="notify_button" gives this specific button a fixed name, so Discord can recognize it again later even after the bot restarts.
+
+The third piece actually lives outside this file, in events.py, where bot.add_view(NotifyButton()) runs inside on_ready. That line is what tells the bot, every single time it starts up, that this custom_id belongs to this exact class and code.
+
+## What actually happens when someone clicks it
+
+```python
+role = interaction.guild.get_role(NOTIFY_ROLE_ID)
+
+if role in interaction.user.roles:
+    await interaction.user.remove_roles(role)
+    ...
+else:
+    await interaction.user.add_roles(role)
+    ...
+```
+
+It is really just a toggle. First it grabs the actual Notify role object using the id stored in config.py. Then it checks whether the person who clicked already has that role. If they do, it takes it away. If they do not, it gives it to them. Either way, the reply uses ephemeral=True, meaning only the person who clicked sees the confirmation message, nobody else in the channel notices anything happening.
