@@ -1,22 +1,3 @@
-"""
-ui_modmenu.py
-
-Everything behind the !m command's moderation menu:
-
-- dm_target()        — helper to privately message a user, ignoring
-                        the error if their DMs are closed
-- ActionModal         — the popup form for entering mute minutes or a
-                        warn reason
-- UnbanModal          — the popup form for entering a username to unban
-- ConfirmActionView   — the Confirm/Cancel step shown after picking an
-                        action from the menu
-- ModMenuView         — the actual menu with 5 buttons: Mute, Warn,
-                        Clear, Ban, Unban
-
-Only the moderator who opened the menu can click its buttons — every
-handler checks interaction.user.id against the stored moderator id.
-"""
-
 import discord
 
 from config import BAN_AT
@@ -25,7 +6,7 @@ from warnings_store import warning_counts, save_warnings
 
 
 async def dm_target(target, text):
-    """Try to DM the target privately. Silently ignore if their DMs are closed."""
+    # tries to DM the person, ignores it if their DMs are closed
     try:
         await target.send(text)
     except discord.Forbidden:
@@ -146,8 +127,7 @@ class ConfirmActionView(discord.ui.View):
 
 
 class ModMenuView(discord.ui.View):
-    """Buttons are laid out in rows: row 0 = Mute/Warn/Clear/Ban, row 1 = Unban.
-    This attaches to an embed message, so together it reads as one boxed card."""
+    # row 0 = Mute/Warn/Clear/Ban, row 1 = Unban
     def __init__(self, target: discord.Member, moderator: discord.Member):
         super().__init__(timeout=30)
         self.target = target
