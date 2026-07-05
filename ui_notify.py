@@ -1,18 +1,10 @@
-"""
-ui_notify.py
-
-The "Toggle Join Pings" button members click in the roles/toggles
-channel to opt in or out of being pinged when someone new joins.
-Uses a fixed custom_id + timeout=None so it keeps working across bot
-restarts, as long as bot.add_view(NotifyButton()) runs in on_ready.
-"""
-
 import discord
 
 from config import NOTIFY_ROLE_ID
 
 
 class NotifyButton(discord.ui.View):
+    # persistent button, needs timeout=None + custom_id + bot.add_view() in on_ready
     def __init__(self):
         super().__init__(timeout=None)
 
