@@ -1,17 +1,63 @@
 # warnings_store.py
 
-This file is the bridge between "warning counts in memory" and "warning counts saved to disk."
+Small file, but it solves a problem I ran into early on that genuinely annoyed me. Every time I restarted the bot to test a change, everyone's warning counts would just vanish back to zero, which meant someone could dodge a ban just by me restarting the bot at the wrong moment. This file fixes that.
 
-## The problem it solves
+## The whole file
 
-Without this file, every user's warning count would just live in a Python dictionary in memory — which means restarting the bot would wipe everyone's counts back to zero, letting repeat offenders dodge consequences just by the bot restarting.
+```python
+import os
+import json
 
-## How it works
+WARNINGS_FILE = "warnings.json"
 
-- **`load_warnings()`** — runs once, when the bot starts. Reads `warnings.json` if it exists and turns it back into a dictionary. If the file doesn't exist yet (first time running the bot), it just returns an empty dictionary.
-- **`save_warnings()`** — writes the current `warning_counts` dictionary back out to `warnings.json`. This gets called every time someone's count changes.
-- **`warning_counts`** — the actual dictionary, loaded once at the bottom of the file. Every other file that does `from warnings_store import warning_counts` gets a reference to this *same* dictionary — since dictionaries are mutable in Python, updating it in `events.py` is instantly visible in `commands.py` and `ui_modmenu.py` too, without needing to pass it around manually.
 
-## Why `warnings.json` isn't in the GitHub repo
+def load_warnings():
+    if not os.path.exists(WARNINGS_FILE):
+        return {}
+    with open(WARNINGS_FILE, "r", encoding="utf-8") as f:
+        return {int(k): v for k, v in json.load(f).items()}
 
-It's just data, not code — and it's specific to your server. It's listed in `.gitignore` so it never gets pushed, the same way `.env` doesn't.
+
+def save_warnings():
+    with open(WARNINGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(warning_counts, f)
+
+
+warning_counts = load_warnings()
+```
+
+## load_warnings
+
+```python
+def load_warnings():
+    if not os.path.exists(WARNINGS_FILE):
+        return {}
+    with open(WARNINGS_FILE, "r", encoding="utf-8") as f:
+        return {int(k): v for k, v in json.load(f).items()}
+```
+
+os.path.exists checks whether warnings.json is even there yet. The very first time the bot ever runs, it will not be, since nobody has been warned yet, so this just returns an empty dictionary instead of crashing.
+
+If the file does exist, json.load(f) reads it and turns it back into a Python dictionary. The part that confused me at first is right after that, {int(k): v for k, v in json.load(f).items()}. JSON only ever stores keys as text, even if they started out as numbers, so every user id gets saved as a string like "123456789". This line rebuilds the dictionary with those keys converted back into actual integers, since the rest of my code expects to compare real numbers, not text that happens to look like numbers.
+
+## save_warnings
+
+```python
+def save_warnings():
+    with open(WARNINGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(warning_counts, f)
+```
+
+This is the reverse direction, taking whatever is currently in warning_counts and writing it back out to the file. I call this every single time a warning count changes anywhere else in the project, so the file on disk never falls out of sync with what is actually happening in memory.
+
+## warning_counts, the shared dictionary
+
+```python
+warning_counts = load_warnings()
+```
+
+This line runs once, right when the bot starts, and it is the part that makes sharing this across files actually work. Since dictionaries in Python are mutable, meaning they can be changed in place, every other file that does from warnings_store import warning_counts is not getting a copy, it is getting a reference to this exact same dictionary. So when events.py adds a warning, commands.py sees that updated count immediately too, without me needing to pass it around manually between files.
+
+## Why warnings.json itself is not on GitHub
+
+It is just data, specific to my own server, not code anyone else would need. It is listed in .gitignore for the same reason .env is, so it never accidentally gets pushed publicly.
