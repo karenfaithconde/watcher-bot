@@ -1,18 +1,31 @@
 # main.py
 
-This is the file you actually run: `python main.py`. It doesn't do much on its own — its whole job is to wake everything else up in the right order.
+This is the file I actually run when I want to start the bot, just python main.py in the terminal. It looks almost too simple for something that kicks off the whole project, and that confused me a bit at first, so let me walk through why it can afford to be this short.
 
-## What it does, step by step
+## Walking through the code
 
-1. Imports `bot` from `bot_instance.py` — the shared bot object everything else plugs into
-2. Imports `TOKEN` from `config.py` — the secret key that lets the bot log into Discord
-3. Imports `events` and `commands` — just importing these two modules is enough to register every `@bot.event` and `@bot.command` in them, since those decorators run the moment the file is loaded
-4. Calls `bot.run(TOKEN)` — this actually connects to Discord and keeps the bot alive
+```python
+from bot_instance import bot
+from config import TOKEN
+```
 
-## Why it's this short
+These two imports pull in the bot object itself, and the secret token needed to log in. Nothing new is created here, both of these already exist elsewhere, I am just borrowing them.
 
-All the real logic lives in other files. `main.py` exists purely to pull everything together in one place and start it up — think of it as flipping the light switch, not wiring the house.
+```python
+import events    # noqa: F401
+import commands  # noqa: F401
+```
 
-## One thing to know
+This part surprised me the most when I first split my code into multiple files. I am importing these two modules, but I never actually call anything from them directly in this file. Turns out, just the act of importing them is enough, because both files are full of @bot.event and @bot.command decorators, and those decorators run and register themselves the instant the file they live in gets loaded. So simply writing import events is really saying, go run everything in that file right now, please.
 
-`bot.run(TOKEN)` is a blocking call — it doesn't return until the bot shuts down. Anything placed after it in the file would never actually run.
+The little # noqa: F401 comments are there for a linter, a tool that checks your code for common mistakes. Normally an unused import gets flagged as a warning, since it looks like a mistake. This comment tells the linter, I know this looks unused, but it is intentional, leave it alone.
+
+```python
+bot.run(TOKEN)
+```
+
+And this is the line that actually does something visible. Everything before it was just preparation, gathering the bot object and making sure every command and event got registered onto it. This line is what actually connects to Discord and keeps the program running.
+
+## The one rule I had to learn the hard way
+
+bot.run(TOKEN) is what is called a blocking call, meaning it does not return control back to the rest of the file until the bot shuts down. In practice that means it has to be the very last line in this file. Anything placed after it would just sit there waiting forever and never actually run.
